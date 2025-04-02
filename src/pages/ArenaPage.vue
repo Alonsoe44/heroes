@@ -65,8 +65,8 @@ import HeroCard from "../features/heroes/components/HeroCard.vue";
 import HeroDetailCard from "../features/heroes/components/HeroDetailCard.vue";
 import type { RankedHero } from "../interfaces/RankedHero";
 import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
-import { getScoresForAllChallenges } from "../features/heroes/utils/utils";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
+import { getFinalRanking } from "../features/heroes/utils/utils";
 
 const { heroes } = useFetchHeroes();
 const listMain = ref<(Hero | RankedHero)[]>([]);
@@ -82,7 +82,7 @@ const startBattle = () => {
   someoneWon.value = true;
   console.log("listMain", listMain.value);
 
-  const rankedHeroes = getScoresForAllChallenges(listMain.value as Hero[]);
+  const rankedHeroes = getFinalRanking(listMain.value as Hero[]);
   listMain.value = rankedHeroes;
 };
 
