@@ -121,6 +121,8 @@ describe("Utils", () => {
           totalScore: { Superman: 25, Flash: 15, Invincible: 14 },
           competitors: mockHeroes,
         };
+        console.log("THI IS THE SCORE I got");
+        console.log(score);
 
         expect(score).toEqual(expectedContext);
       });
@@ -130,20 +132,6 @@ describe("Utils", () => {
       it("should calculate final ranking based on total score", () => {
         const ranking = getFinalRanking(mockHeroes);
         const expectedRanking = [
-          {
-            id: "1",
-            name: "Superman",
-            picture: "base64...",
-            attributes: {
-              strength: 10,
-              agility: 8,
-              weight: 7,
-              endurance: 9,
-              charisma: 8,
-            },
-            totalScore: 25,
-            rank: 1,
-          },
           {
             id: "2",
             name: "Flash",
@@ -155,9 +143,24 @@ describe("Utils", () => {
               endurance: 8,
               charisma: 7,
             },
-            totalScore: 15,
+            totalScore: 19,
+            rank: 1,
+          },
+          {
+            id: "1",
+            name: "Superman",
+            picture: "base64...",
+            attributes: {
+              strength: 10,
+              agility: 8,
+              weight: 7,
+              endurance: 9,
+              charisma: 8,
+            },
+            totalScore: 17,
             rank: 2,
           },
+
           {
             id: "3",
             name: "Invincible",
@@ -169,12 +172,10 @@ describe("Utils", () => {
               endurance: 7,
               charisma: 6,
             },
-            totalScore: 14,
+            totalScore: 9,
             rank: 3,
           },
         ];
-        console.log("result ranking");
-        console.log(ranking);
 
         expect(ranking).toEqual(expectedRanking);
       });

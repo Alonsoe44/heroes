@@ -33,7 +33,7 @@ function startTellJoke(hero: Hero, context: ChallengeContext): number {
 function startThrowVillain(hero: Hero, context: ChallengeContext): number {
   const worstScore = Math.min(...Object.values(context.totalScore));
   const worstHeroes = Object.entries(context.totalScore)
-    .filter(([_, score]) => score === worstScore)
+    .filter(([, score]) => score === worstScore)
     .map(([heroName]) => heroName);
 
   const isLast = worstHeroes.find((heroName) => heroName === hero.name);
@@ -62,47 +62,31 @@ const getRoundScore = (
     ...context,
   };
 
-  context.competitors.forEach((hero) => {
-    newContext.RoundScore[hero.name] = startGenericCompetition(hero, context);
+  const heroesScore: [string, number][] = context.competitors.map((hero) => {
+    return [hero.name, startGenericCompetition(hero, context)];
   });
 
-  const biggestScore: number = Math.max(
-    ...Object.values(newContext.RoundScore)
-  );
-  const currentWinner = Object.entries(context.RoundScore).filter(
-    ([_, score]) => biggestScore === score
-  );
-  currentWinner.forEach(([winner]) => {
-    context.winsHistory[winner] = context.winsHistory[winner] + 1;
-    context.totalScore[winner] = context.totalScore[winner] + 5;
-  });
+  const sortedHeroesScore = heroesScore.sort((a, b) => b[1] - a[1]);
 
-  const heroesWithoutWinner: [string, number][] = Object.entries(
-    newContext.RoundScore
-  ).filter(([_, score]) => score !== biggestScore);
+  const ranked = sortedHeroesScore.reduce<[string, number][][]>((acc, curr) => {
+    const lastGroup = acc[acc.length - 1];
+    if (!lastGroup || lastGroup[0][1] !== curr[1]) {
+      acc.push([curr]);
+    } else {
+      lastGroup.push(curr);
+    }
+    return acc;
+  }, []);
 
-  const biggestScoreSecondPlace: number = Math.max(
-    ...heroesWithoutWinner.map(([_, score]) => score)
-  );
-  const currentSecondPlace: [string, number][] = heroesWithoutWinner.filter(
-    ([_, score]) => biggestScoreSecondPlace === score
-  );
-  currentSecondPlace.forEach(([secondPlace]) => {
-    context.totalScore[secondPlace] = context.totalScore[secondPlace] + 3;
-  });
-
-  const heroesWithoutSecondPlace: [string, number][] =
-    heroesWithoutWinner.filter(
-      ([_, score]) => score !== biggestScoreSecondPlace
-    );
-  const biggestScoreThirdPlace: number = Math.max(
-    ...heroesWithoutSecondPlace.map(([_, score]) => score)
-  );
-  const currentThirdPlace: [string, number][] = heroesWithoutSecondPlace.filter(
-    ([_, score]) => biggestScoreThirdPlace === score
-  );
-  currentThirdPlace.forEach(([thirdPlace]) => {
-    context.totalScore[thirdPlace] = context.totalScore[thirdPlace] + 1;
+  ranked.forEach((group, index) => {
+    group.forEach(([heroName]) => {
+      newContext.RoundScore[heroName] = group[0][1];
+      newContext.totalScore[heroName] =
+        newContext.totalScore[heroName] +
+        (index === 0 ? 5 : index === 1 ? 3 : 1);
+      newContext.winsHistory[heroName] =
+        newContext.winsHistory[heroName] + (index === 0 ? 1 : 0);
+    });
   });
 
   return newContext;
@@ -118,33 +102,21 @@ const getFinalRanking = (heroes: Hero[]): RankedHero[] => {
     competitors: heroes,
     RoundScore: {},
   };
-  console.log("start context");
-  console.log(startContext.totalScore);
-  const firsRoundContext = getRoundScore(startContext, startClimbSkyscraper);
-  console.log("first round");
-  console.log(firsRoundContext.totalScore);
-  const secondRoundContext = getRoundScore(firsRoundContext, startTellJoke);
-  console.log("second round");
-  console.log(secondRoundContext.totalScore);
-  const thirdRoundContext = getRoundScore(
-    secondRoundContext,
-    startThrowVillain
-  );
-  console.log("third round");
-  console.log(thirdRoundContext.totalScore);
-  const fourthRoundContext = getRoundScore(thirdRoundContext, startRun200Km);
-  console.log("fourth round");
-  console.log(fourthRoundContext.totalScore);
-  const fifthRoundContext = getRoundScore(
-    fourthRoundContext,
+
+  const pipeRounds = (
+    ...rounds: ((hero: Hero, context: ChallengeContext) => number)[]
+  ) => rounds.reduce((ctx, round) => getRoundScore(ctx, round), startContext);
+
+  const finalContext = pipeRounds(
+    startClimbSkyscraper,
+    startTellJoke,
+    startThrowVillain,
+    startRun200Km,
     startRescueKittens
   );
-  console.log("fifth round");
-  console.log(fifthRoundContext.totalScore);
-
   const heroesScore = heroes.map((heroe) => ({
     ...heroe,
-    totalScore: fifthRoundContext.totalScore[heroe.name],
+    totalScore: finalContext.totalScore[heroe.name],
   }));
 
   const sorted = heroesScore.sort((a, b) => b.totalScore - a.totalScore);

@@ -2,7 +2,7 @@
   <div class="mt-10 mx-10 flex justify-between">
     <HeroTitle />
     <button
-      v-if="listMain.length === 3 && !someoneWon"
+      v-if="listMain.length === MAX_HEROES && !someoneWon"
       class="text-white bg-primary px-4 py-2 rounded-xl hover:bg-indigo-700 transition w-60 text-center mt-4 h-10"
       @click="startBattle"
     >
@@ -67,6 +67,7 @@ import type { RankedHero } from "../interfaces/RankedHero";
 import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
 import { getFinalRanking } from "../features/heroes/utils/utils";
+const MAX_HEROES = 2;
 
 const { heroes } = useFetchHeroes();
 const listMain = ref<(Hero | RankedHero)[]>([]);
@@ -80,17 +81,13 @@ const listSidebar = computed(() =>
 
 const startBattle = () => {
   someoneWon.value = true;
-  console.log("listMain", listMain.value);
-
   const rankedHeroes = getFinalRanking(listMain.value as Hero[]);
   listMain.value = rankedHeroes;
 };
 
-function onAdd(evt: { to: HTMLElement }) {
-  if (evt.to.classList.contains("bg-blue-100") && listMain.value.length > 3) {
-    listMain.value.splice(3);
-    console.log("listMain", listMain.value);
-    console.log("listSidebar", listSidebar.value);
+function onAdd() {
+  if (listMain.value.length > MAX_HEROES) {
+    listMain.value.splice(MAX_HEROES);
   }
 }
 </script>

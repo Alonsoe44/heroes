@@ -32,26 +32,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from "vue";
 
-const props = defineProps({
-  modelValue: String,
-});
-const emit = defineEmits(["update:modelValue"]);
+const props = defineProps<{
+  modelValue: string | null;
+}>();
 
-const fileInput = ref(null);
-const previewUrl = ref(props.modelValue || null);
+const emit = defineEmits<{
+  (e: "update:modelValue", value: string): void;
+}>();
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const previewUrl = ref<string | null>(props.modelValue || null);
 const dragging = ref(false);
 
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
+const handleFileChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
   processImage(file);
 };
 
-const handleDrop = (e) => {
+const handleDrop = (e: DragEvent) => {
   dragging.value = false;
-  const file = e.dataTransfer.files[0];
+  const file = e.dataTransfer?.files[0];
   processImage(file);
 };
 
@@ -59,15 +63,21 @@ const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
-const processImage = (file) => {
+const processImage = (file: File | undefined) => {
   if (!file || !file.type.startsWith("image/")) return;
 
   const reader = new FileReader();
-  reader.onload = (event) => {
+
+  reader.onload = (event: ProgressEvent<FileReader>) => {
+    const result = event.target?.result;
+    if (typeof result !== "string") return;
+
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
+
+      if (!ctx) return;
 
       const targetSize = 128;
       canvas.width = targetSize;
@@ -84,8 +94,9 @@ const processImage = (file) => {
       emit("update:modelValue", croppedBase64);
       previewUrl.value = croppedBase64;
     };
-    img.src = event.target.result;
+    img.src = result;
   };
+
   reader.readAsDataURL(file);
 };
 
