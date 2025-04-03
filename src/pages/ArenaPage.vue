@@ -67,7 +67,7 @@ import type { RankedHero } from "../interfaces/RankedHero";
 import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
 import { getFinalRanking } from "../features/heroes/utils/utils";
-const MAX_HEROES = 2;
+const MAX_HEROES = 3;
 
 const { heroes } = useFetchHeroes();
 const listMain = ref<(Hero | RankedHero)[]>([]);
