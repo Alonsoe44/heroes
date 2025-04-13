@@ -1,99 +1,212 @@
 <template>
-  <div class="mt-10 mx-10 flex justify-between">
-    <HeroTitle />
-    <button
-      v-if="listMain.length === MAX_HEROES && !someoneWon"
-      class="text-white bg-primary px-4 py-2 rounded-xl hover:bg-indigo-700 transition w-60 text-center mt-4 h-10"
-      @click="startBattle"
-    >
-      Start Battle
-    </button>
-    <div v-else-if="someoneWon">
+  <div class="min-h-screen p-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+      <HeroTitle />
       <router-link
+        v-if="someoneWon"
         to="/"
-        class="text-white bg-primary px-4 py-2 rounded-xl hover:bg-indigo-700 transition w-60 text-center mt-4 h-10"
+        class="text-white bg-primary px-6 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-300"
       >
         Go Back
       </router-link>
     </div>
-  </div>
-  <div class="flex gap-8 p-8">
-    <VueDraggable
-      v-model="listSidebar"
-      class="flex flex-col gap-2 p-4 w-1/5 h-[700px] rounded-xl shadow-md border-1 border-secondary-light overflow-auto items-center"
-      animation="150"
-      ghost-class="ghost"
-      group="heroes"
-      :disabled="someoneWon"
-    >
-      <HeroCard v-for="hero in listSidebar" :key="hero.name" :hero="hero" />
-    </VueDraggable>
 
-    <VueDraggable
-      v-model="listMain"
-      class="flex gap-12 p-8 w-3/4 h-[700px] rounded-xl overflow-hidden relative"
-      animation="150"
-      ghost-class="ghost"
-      group="heroes"
-      @add="onAdd"
-      :disabled="someoneWon"
-    >
-      <img
-        src="../assets/banner2.webp"
-        alt="arena"
-        class="absolute top-0 left-0 w-full h-full object-cover -z-10 motion-safe:animate-pulse opacity-90"
-      />
-      <div v-for="hero in listMain" :key="hero.id" class="w-1/3 h-full">
-        <HeroDetailCard :hero="hero" />
-      </div>
-
+    <!-- Main Arena Container -->
+    <div class="relative mb-12">
       <div
-        v-if="listMain.length === 0"
-        class="text-5xl text-black mt-[30%] font-bold"
+        class="bg-white rounded-2xl shadow-xl p-8 relative overflow-hidden flex flex-col"
       >
-        Drop up to 3 heroes here
+        <img
+          src="../assets/banner2.webp"
+          alt="arena"
+          class="absolute top-0 left-0 w-full h-full object-cover motion-safe:animate-pulse opacity-50"
+        />
+
+        <!-- Selected Heroes Grid -->
+        <div class="grid grid-cols-3 gap-8 h-[600px] mb-8">
+          <div
+            v-for="hero in selectedHeroes"
+            :key="hero.id"
+            class="h-full arena-slot"
+          >
+            <div class="h-full w-full">
+              <HeroDetailCard :hero="hero" />
+            </div>
+          </div>
+          <div
+            v-for="i in MAX_HEROES - selectedHeroes.length"
+            :key="`empty-${i}`"
+            class="border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center h-full bg-white z-10"
+          >
+            <span class="text-gray-400 text-lg">Select a hero</span>
+          </div>
+        </div>
+
+        <!-- Battle Button Container -->
+        <div
+          v-if="selectedHeroes.length === MAX_HEROES && !someoneWon"
+          class="flex justify-center mt-auto"
+        >
+          <EpicButton
+            variant="battle"
+            size="lg"
+            leftIcon="⚔️"
+            rightIcon="⚔️"
+            @click="startBattle"
+          >
+            START BATTLE
+          </EpicButton>
+        </div>
       </div>
-    </VueDraggable>
+    </div>
+
+    <!-- Available Heroes Grid -->
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <div
+        v-for="hero in availableHeroes"
+        :key="hero.id"
+        class="h-[500px] transform transition-all duration-300 hover:scale-105 cursor-pointer"
+        @click="selectHero(hero)"
+        :data-hero-id="hero.id"
+      >
+        <div class="h-full w-full">
+          <HeroDetailCard :hero="hero" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { VueDraggable } from "vue-draggable-plus";
 import type Hero from "../features/heroes/interfaces/Hero";
-import HeroCard from "../features/heroes/components/HeroCard.vue";
 import HeroDetailCard from "../features/heroes/components/HeroDetailCard.vue";
-import type { RankedHero } from "../interfaces/RankedHero";
 import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
 import { getFinalRanking } from "../features/heroes/utils/utils";
-const MAX_HEROES = 3;
+import EpicButton from "../features/ui/components/EpicButton.vue";
+import gsap from "gsap";
+import { nextTick } from "vue";
 
+const selectHero = async (hero: Hero) => {
+  if (selectedHeroes.value.length >= MAX_HEROES) return;
+
+  // Get original element
+  const originalEl = document.querySelector(`[data-hero-id="${hero.id}"]`);
+  if (!originalEl) return;
+
+  const rect = originalEl.getBoundingClientRect();
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+  // Clone
+  const clone = originalEl.cloneNode(true) as HTMLElement;
+  clone.style.position = "absolute";
+  clone.style.top = `${rect.top + scrollTop}px`;
+  clone.style.left = `${rect.left + scrollLeft}px`;
+  clone.style.width = `${rect.width}px`;
+  clone.style.height = `${rect.height}px`;
+  clone.style.zIndex = "999";
+  clone.style.pointerEvents = "none";
+  clone.style.transition = "none";
+  document.body.appendChild(clone);
+
+  // TEMP add a dummy hero just to measure the slot position
+  const dummyHero = { ...hero, isDummy: true };
+  selectedHeroes.value.push(dummyHero);
+  await nextTick();
+
+  // Find the drop target
+  const targetIndex = selectedHeroes.value.findIndex(
+    (h) => h.id === hero.id || h.isDummy
+  );
+  const targetEl = document.querySelectorAll(".arena-slot")[targetIndex];
+  if (!targetEl) {
+    selectedHeroes.value.pop(); // Remove dummy
+    clone.remove();
+    return;
+  }
+
+  const targetRect = targetEl.getBoundingClientRect();
+
+  // Remove dummy before actual insert
+  selectedHeroes.value.pop();
+
+  // Animate the clone
+  gsap.to(clone, {
+    top: `${targetRect.top + scrollTop}px`,
+    left: `${targetRect.left + scrollLeft}px`,
+    width: `${targetRect.width}px`,
+    height: `${targetRect.height}px`,
+    duration: 0.3,
+    ease: "power2.inOut",
+    onComplete: () => {
+      clone.remove();
+
+      // Now add the real hero
+      const heroWithFlag = { ...hero, isNew: true };
+      selectedHeroes.value.push(heroWithFlag);
+
+      // Clear isNew flag
+      setTimeout(() => {
+        const index = selectedHeroes.value.findIndex((h) => h.id === hero.id);
+        if (index !== -1) {
+          selectedHeroes.value[index] = { ...heroWithFlag, isNew: false };
+        }
+      }, 500);
+    },
+  });
+};
+
+const MAX_HEROES = 3;
 const { heroes } = useFetchHeroes();
-const listMain = ref<(Hero | RankedHero)[]>([]);
+const selectedHeroes = ref<(Hero & { isNew?: boolean })[]>([]);
 const someoneWon = ref(false);
 
-const listSidebar = computed(() =>
+const availableHeroes = computed(() =>
   heroes.value.filter(
-    (hero) => !listMain.value.some((h) => h.name === hero.name)
+    (hero) => !selectedHeroes.value.some((h) => h.id === hero.id)
   )
 );
 
-const startBattle = () => {
-  someoneWon.value = true;
-  const rankedHeroes = getFinalRanking(listMain.value as Hero[]);
-  listMain.value = rankedHeroes;
+const selectHero0 = (hero: Hero) => {
+  if (selectedHeroes.value.length >= MAX_HEROES) return;
+
+  const heroWithFlag = { ...hero, isNew: true };
+  selectedHeroes.value.push(heroWithFlag);
+
+  // Remove the isNew flag after animation
+  setTimeout(() => {
+    const index = selectedHeroes.value.findIndex((h) => h.id === hero.id);
+    if (index !== -1) {
+      selectedHeroes.value[index] = { ...heroWithFlag, isNew: false };
+    }
+  }, 500);
 };
 
-function onAdd() {
-  if (listMain.value.length > MAX_HEROES) {
-    listMain.value.splice(MAX_HEROES);
-  }
-}
+const startBattle = () => {
+  someoneWon.value = true;
+  const rankedHeroes = getFinalRanking(selectedHeroes.value as Hero[]);
+  selectedHeroes.value = rankedHeroes;
+};
 </script>
 
 <style scoped>
-.ghost {
-  opacity: 0.4;
+@keyframes fly-in {
+  0% {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fly-in {
+  animation: fly-in 0.5s ease-out forwards;
 }
 </style>
