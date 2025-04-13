@@ -24,11 +24,11 @@
         />
 
         <!-- Climbing Arena -->
-        <ClimbingAnimation
+        <AnimationSequence
           v-if="showClimb"
-          ref="climbingArena"
           :heroes="selectedHeroes"
-          @climbing-complete="onClimbingComplete"
+          @climbingComplete="onAnimationComplete"
+          ref="animationSequence"
         />
 
         <!-- Selected Heroes Grid -->
@@ -57,6 +57,7 @@
           class="flex justify-center mt-auto"
         >
           <EpicButton
+            v-if="!showClimb"
             variant="battle"
             size="lg"
             leftIcon="⚔️"
@@ -98,20 +99,20 @@ import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
 import { getFinalRanking } from "../features/heroes/utils/utils";
 import EpicButton from "../features/ui/components/EpicButton.vue";
-import ClimbingAnimation from "../features/arena/components/ClimbingAnimation.vue";
+import AnimationSequence from "../features/arena/components/AnimationSequence.vue";
 import { nextTick } from "vue";
 import gsap from "gsap";
 
 const showClimb = ref(false);
-const climbingArena = ref<InstanceType<typeof ClimbingArena> | null>(null);
+const animationSequence = ref<InstanceType<typeof AnimationSequence> | null>(
+  null
+);
 
-const startBattle = async () => {
+const startBattle = () => {
   showClimb.value = true;
-  await nextTick();
-  climbingArena.value?.startClimbing();
 };
 
-const onClimbingComplete = (winners: Hero[]) => {
+const onAnimationComplete = (winners: Hero[]) => {
   someoneWon.value = true;
   const rankedHeroes = getFinalRanking(winners);
   selectedHeroes.value = rankedHeroes;

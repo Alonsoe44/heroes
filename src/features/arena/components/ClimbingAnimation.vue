@@ -2,7 +2,7 @@
   <div
     class="relative h-[600px] w-full mt-8 overflow-hidden bg-gray-100 rounded-xl"
   >
-    <!-- Animated Background - Ajustado para empezar desde la base -->
+    <!-- Background -->
     <div class="absolute inset-0 overflow-hidden">
       <img
         src="../../../assets/skyscraper.png"
@@ -36,27 +36,18 @@
       </div>
     </div>
 
-    <!-- Dynamic Height Markers -->
+    <!-- Height Counter -->
     <div
-      class="absolute left-4 top-0 bottom-0 z-20 pointer-events-none h-full overflow-hidden"
-      ref="markersContainer"
+      class="absolute left-8 top-72 z-30 text-8xl font-black text-black"
+      ref="heightCounter"
     >
-      <div class="relative h-[300%]" ref="markersWrapper" style="bottom: 0">
-        <div
-          v-for="n in 30"
-          :key="n"
-          class="parallax-floor text-black text-4xl font-black opacity-0 absolute"
-          :style="`bottom: ${(n - 1) * 3.33}%`"
-        >
-          {{ n * 10 }}F
-        </div>
-      </div>
+      <span ref="counterDisplay">0</span> F
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import type Hero from "@/features/heroes/interfaces/Hero";
 import gsap from "gsap";
 
@@ -70,51 +61,49 @@ const emit = defineEmits<{
 
 const heroElements = ref<HTMLElement[]>([]);
 const backgroundImage = ref<HTMLImageElement | null>(null);
-const markersContainer = ref<HTMLElement | null>(null);
-const markersWrapper = ref<HTMLElement | null>(null);
+const counterDisplay = ref<HTMLElement | null>(null);
 
 const setHeroRef = (el: HTMLElement | null, index: number) => {
   if (el) heroElements.value[index] = el;
 };
 
-const startClimbing = () => {
-  // Animate background - Start showing the base and move downward
+const startAnimation = () => {
+  // Animate background
   gsap.fromTo(
     backgroundImage.value,
-    { y: "0%" }, // Start showing the base
-    {
-      y: "66.67%", // Move downward (positive value)
-      duration: 2,
-      ease: "power1.inOut",
-    }
-  );
-
-  // Animate floor markers - Synchronized with background
-  gsap.fromTo(
-    markersWrapper.value,
     { y: "0%" },
     {
-      y: "66.67%", // Move downward (positive value)
+      y: "66.67%",
       duration: 2,
       ease: "power1.inOut",
     }
   );
 
-  gsap.to(".parallax-floor", {
-    opacity: 1,
-    duration: 0.1,
-    stagger: {
-      each: 0.05,
-      from: "end",
-    },
-  });
+  // Animate counter
+  gsap.fromTo(
+    counterDisplay.value,
+    { innerText: "0" },
+    {
+      innerText: "300",
+      duration: 2,
+      ease: "power1.inOut",
+      snap: { innerText: 10 }, // Snap to multiples of 10
+      onUpdate: () => {
+        if (counterDisplay.value) {
+          // Add leading zeros
+          const value = counterDisplay.value.innerText;
+          counterDisplay.value.innerText = value.padStart(3, "0");
+        }
+      },
+    }
+  );
 
-  // Animate heroes - Mantener la dirección hacia arriba
+  // Animate heroes
   heroElements.value.forEach((el) => {
     gsap.set(el, { y: 0 });
   });
 
-  const climbers = heroElements.value.map((el, i) => {
+  const climbers = heroElements.value.map((el) => {
     const delay = gsap.utils.random(0, 0.2);
 
     return gsap.to(el, {
@@ -122,19 +111,19 @@ const startClimbing = () => {
         {
           x: gsap.utils.random(-15, 15),
           y: "-=200",
-          duration: 0.3,
+          duration: 0.5,
           scale: 1.2,
         },
         {
           x: gsap.utils.random(15, -15),
           y: "-=200",
-          duration: 0.3,
+          duration: 0.5,
           scale: 1.1,
         },
         {
           x: gsap.utils.random(-25, 25),
           y: "-=250",
-          duration: 0.4,
+          duration: 0.7,
           scale: 1.15,
         },
         {
@@ -144,7 +133,7 @@ const startClimbing = () => {
           scale: 1,
         },
       ],
-      ease: "power2.inOut",
+      ease: "power1.inOut",
       delay,
     });
   });
@@ -154,7 +143,9 @@ const startClimbing = () => {
   });
 };
 
-defineExpose({ startClimbing });
+onMounted(() => {
+  startAnimation();
+});
 </script>
 
 <style scoped>
@@ -163,11 +154,12 @@ defineExpose({ startClimbing });
   will-change: transform;
 }
 
-.parallax-floor {
-  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+/* Counter styles */
+span {
   font-family: "Arial Black", sans-serif;
-  transform: translateY(0);
-  will-change: transform, opacity;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-feature-settings: "tnum";
+  letter-spacing: -2px;
 }
 
 .hero-circle img {
@@ -186,7 +178,7 @@ defineExpose({ startClimbing });
   }
 }
 
-/* Optional: Add a subtle gradient overlay */
+/* Gradient overlay */
 .relative::after {
   content: "";
   position: absolute;
@@ -197,20 +189,5 @@ defineExpose({ startClimbing });
   background: linear-gradient(to top, rgba(255, 255, 255, 0.2), transparent);
   pointer-events: none;
   z-index: 1;
-}
-
-/* Asegurar que el contenedor del fondo mantenga la proporción */
-.skyscraper-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-/* Ajustar la imagen para que se vea completa */
-.skyscraper-container img {
-  width: 100%;
-  height: 300%;
-  object-fit: cover;
-  object-position: bottom;
 }
 </style>
