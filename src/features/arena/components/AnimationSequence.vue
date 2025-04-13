@@ -13,7 +13,7 @@
         class="absolute inset-0 flex items-center justify-center"
       >
         <div
-          class="text-6xl font-black text-primary transform transition-transform duration-500"
+          class="text-4xl font-bold transform transition-transform duration-500"
           :class="[
             isTransitioning ? 'translate-x-0' : 'translate-x-full',
             isTransitioning ? 'opacity-100' : 'opacity-0',
@@ -24,13 +24,16 @@
       </div>
     </div>
 
-    <!-- Animation components -->
-    <component
-      :is="currentAnimation"
-      v-if="!isTransitioning"
-      :heroes="props.heroes"
-      @climbingComplete="handleAnimationComplete"
-    />
+    <!-- Animation components with transition -->
+    <Transition name="slide" mode="out-in">
+      <component
+        :is="currentAnimation"
+        v-if="!isTransitioning"
+        :key="currentIndex"
+        :heroes="props.heroes"
+        @climbingComplete="handleAnimationComplete"
+      />
+    </Transition>
   </div>
 </template>
 
@@ -38,6 +41,9 @@
 import { ref, shallowRef, onMounted } from "vue";
 import ClimbingAnimation from "./ClimbingAnimation.vue";
 import TellingJokeAnimation from "./TellingJokeAnimation.vue";
+import ThrowVillainAnimation from "./ThrowVillainAnimation.vue";
+import Run200km from "./Run200km.vue";
+import RescueKitten from "./RescueKitten.vue";
 
 interface Hero {
   id: number;
@@ -51,14 +57,24 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "climbingComplete", winners: Hero[]): void;
+  (e: "allSequencesComplete"): void;
 }>();
 
 const animations = [
   { component: ClimbingAnimation, duration: 5000 },
   { component: TellingJokeAnimation, duration: 5000 },
+  { component: ThrowVillainAnimation, duration: 5000 },
+  { component: Run200km, duration: 5000 },
+  { component: RescueKitten, duration: 5000 },
 ];
 
-const transitionTexts = ["CLIMBING TIME!", "JOKE TIME!"];
+const transitionTexts = [
+  "Climbing the skyscraper",
+  "Comedy time",
+  "Throw the villain",
+  "Big race 200km",
+  "Rescue the kitten",
+];
 
 const currentIndex = ref(0);
 const currentAnimation = shallowRef(animations[0].component);
@@ -67,6 +83,12 @@ const transitionIndex = ref(0);
 
 const handleAnimationComplete = (winners: Hero[]) => {
   emit("climbingComplete", winners);
+
+  // Check if we've completed all sequences
+  if (currentIndex.value === animations.length - 1) {
+    emit("allSequencesComplete");
+    return; // Skip transition and end the sequence
+  }
 
   isTransitioning.value = true;
 
@@ -92,5 +114,18 @@ onMounted(() => {
 <style scoped>
 .text-primary {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.6s ease;
+}
+.slide-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
 }
 </style>

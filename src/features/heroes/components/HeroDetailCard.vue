@@ -37,7 +37,7 @@
             Score: {{ hero.totalScore }}
           </p>
 
-          <div v-if="hero.rank && hero.rank <= 3" class="text-3xl">
+          <div v-if="hero.rank && hero.rank <= 3" class="text-9xl">
             <span v-if="hero.rank === 1">🥇</span>
             <span v-else-if="hero.rank === 2">🥈</span>
             <span v-else-if="hero.rank === 3">🥉</span>

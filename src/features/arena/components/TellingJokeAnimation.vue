@@ -56,6 +56,13 @@ const props = defineProps<{
   heroes: { id: number; name: string; picture: string }[];
 }>();
 
+const emit = defineEmits<{
+  (
+    e: "climbingComplete",
+    winners: { id: number; name: string; picture: string }[]
+  ): void;
+}>();
+
 const jokes = [
   "Why did the dev go broke? Because he used up all his cache!",
   "404 joke not found.",
@@ -98,8 +105,8 @@ onMounted(() => {
   textEls.value.forEach((el, i) => {
     const tween = gsap.to(el, {
       x: "-300%",
-      duration: 5,
-      delay: i * 1.5,
+      duration: 3,
+      delay: i * 0.8,
       ease: "none",
       repeat: -1,
       repeatDelay: 1,
@@ -116,6 +123,11 @@ onMounted(() => {
     });
     textTweens.push(tween);
   });
+
+  // Emit completion after 3 seconds
+  setTimeout(() => {
+    emit("climbingComplete", props.heroes);
+  }, 3000);
 });
 
 onUnmounted(() => {

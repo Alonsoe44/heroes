@@ -24,13 +24,12 @@
         />
 
         <!-- Climbing Arena -->
+
         <AnimationSequence
           v-if="showClimb"
           :heroes="selectedHeroes"
-          @climbingComplete="onAnimationComplete"
-          ref="animationSequence"
+          @allSequencesComplete="handleAllSequencesComplete"
         />
-
         <!-- Selected Heroes Grid -->
         <div v-else class="grid grid-cols-3 gap-8 h-[600px] mb-8">
           <div
@@ -60,11 +59,9 @@
             v-if="!showClimb"
             variant="battle"
             size="lg"
-            leftIcon="⚔️"
-            rightIcon="⚔️"
             @click="startBattle"
           >
-            START BATTLE
+            Start battle
           </EpicButton>
         </div>
       </div>
@@ -102,20 +99,73 @@ import EpicButton from "../features/ui/components/EpicButton.vue";
 import AnimationSequence from "../features/arena/components/AnimationSequence.vue";
 import { nextTick } from "vue";
 import gsap from "gsap";
+import confetti from "canvas-confetti";
 
 const showClimb = ref(false);
-const animationSequence = ref<InstanceType<typeof AnimationSequence> | null>(
-  null
-);
 
 const startBattle = () => {
   showClimb.value = true;
 };
 
-const onAnimationComplete = (winners: Hero[]) => {
+const handleAllSequencesComplete = () => {
   someoneWon.value = true;
-  const rankedHeroes = getFinalRanking(winners);
+  showClimb.value = false;
+  const rankedHeroes = getFinalRanking(selectedHeroes.value);
   selectedHeroes.value = rankedHeroes;
+
+  // Multiple confetti bursts
+  const defaults = {
+    spread: 360,
+    ticks: 100,
+    gravity: 0,
+    decay: 0.94,
+    startVelocity: 30,
+    shapes: ["star"],
+    colors: ["FFE400", "FFBD00", "E89400", "FFCA6C", "FDFFB8"],
+  };
+
+  function shoot() {
+    confetti({
+      ...defaults,
+      particleCount: 40,
+      scalar: 1.2,
+      shapes: ["star"],
+    });
+
+    confetti({
+      ...defaults,
+      particleCount: 10,
+      scalar: 0.75,
+      shapes: ["circle"],
+    });
+  }
+
+  setTimeout(shoot, 0);
+  setTimeout(shoot, 100);
+  setTimeout(shoot, 200);
+
+  // Left side burst
+  confetti({
+    particleCount: 50,
+    angle: 60,
+    spread: 55,
+    origin: { x: 0, y: 0.7 },
+  });
+
+  // Right side burst
+  confetti({
+    particleCount: 50,
+    angle: 120,
+    spread: 55,
+    origin: { x: 1, y: 0.7 },
+  });
+
+  // Center burst
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
 };
 
 const selectHero = async (hero: Hero) => {
