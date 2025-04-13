@@ -23,8 +23,16 @@
           class="absolute top-0 left-0 w-full h-full object-cover motion-safe:animate-pulse opacity-50"
         />
 
+        <!-- Climbing Arena -->
+        <ClimbingAnimation
+          v-if="showClimb"
+          ref="climbingArena"
+          :heroes="selectedHeroes"
+          @climbing-complete="onClimbingComplete"
+        />
+
         <!-- Selected Heroes Grid -->
-        <div class="grid grid-cols-3 gap-8 h-[600px] mb-8">
+        <div v-else class="grid grid-cols-3 gap-8 h-[600px] mb-8">
           <div
             v-for="hero in selectedHeroes"
             :key="hero.id"
@@ -65,6 +73,8 @@
     <div
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
     >
+      <!-- Climbing Arena Overlay -->
+
       <div
         v-for="hero in availableHeroes"
         :key="hero.id"
@@ -88,8 +98,24 @@ import useFetchHeroes from "../features/heroes/composables/useFetchHeroes";
 import HeroTitle from "../features/ui/components/HeroTitle.vue";
 import { getFinalRanking } from "../features/heroes/utils/utils";
 import EpicButton from "../features/ui/components/EpicButton.vue";
-import gsap from "gsap";
+import ClimbingAnimation from "../features/arena/components/ClimbingAnimation.vue";
 import { nextTick } from "vue";
+import gsap from "gsap";
+
+const showClimb = ref(false);
+const climbingArena = ref<InstanceType<typeof ClimbingArena> | null>(null);
+
+const startBattle = async () => {
+  showClimb.value = true;
+  await nextTick();
+  climbingArena.value?.startClimbing();
+};
+
+const onClimbingComplete = (winners: Hero[]) => {
+  someoneWon.value = true;
+  const rankedHeroes = getFinalRanking(winners);
+  selectedHeroes.value = rankedHeroes;
+};
 
 const selectHero = async (hero: Hero) => {
   if (selectedHeroes.value.length >= MAX_HEROES) return;
@@ -171,27 +197,6 @@ const availableHeroes = computed(() =>
     (hero) => !selectedHeroes.value.some((h) => h.id === hero.id)
   )
 );
-
-const selectHero0 = (hero: Hero) => {
-  if (selectedHeroes.value.length >= MAX_HEROES) return;
-
-  const heroWithFlag = { ...hero, isNew: true };
-  selectedHeroes.value.push(heroWithFlag);
-
-  // Remove the isNew flag after animation
-  setTimeout(() => {
-    const index = selectedHeroes.value.findIndex((h) => h.id === hero.id);
-    if (index !== -1) {
-      selectedHeroes.value[index] = { ...heroWithFlag, isNew: false };
-    }
-  }, 500);
-};
-
-const startBattle = () => {
-  someoneWon.value = true;
-  const rankedHeroes = getFinalRanking(selectedHeroes.value as Hero[]);
-  selectedHeroes.value = rankedHeroes;
-};
 </script>
 
 <style scoped>

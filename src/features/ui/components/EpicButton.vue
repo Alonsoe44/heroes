@@ -1,18 +1,12 @@
 <template>
   <button
     :class="[
-      'epic-button group relative px-12 py-6 text-xl font-bold text-white rounded-2xl',
+      'epic-button group relative text-xl font-bold text-white rounded-2xl',
       'transform transition-all duration-300',
       'hover:scale-105 hover:shadow-[0_0_30px_rgba(79,70,229,0.5)]',
       'active:scale-95',
       'overflow-hidden',
-      variant === 'battle'
-        ? 'bg-gradient-to-r from-indigo-600 to-purple-600'
-        : '',
-      variant === 'success'
-        ? 'bg-gradient-to-r from-emerald-600 to-teal-600'
-        : '',
-      variant === 'danger' ? 'bg-gradient-to-r from-red-600 to-rose-600' : '',
+      'bg-primary',
       size === 'lg' ? 'px-12 py-6 text-xl' : '',
       size === 'md' ? 'px-8 py-4 text-lg' : '',
       size === 'sm' ? 'px-6 py-3 text-base' : '',
@@ -21,16 +15,7 @@
   >
     <!-- Animated background effect -->
     <div
-      :class="[
-        'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300',
-        variant === 'battle'
-          ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
-          : '',
-        variant === 'success'
-          ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-          : '',
-        variant === 'danger' ? 'bg-gradient-to-r from-red-500 to-rose-500' : '',
-      ]"
+      class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary"
     ></div>
 
     <!-- Pulse effect -->
@@ -40,16 +25,7 @@
 
     <!-- Sparkle effects -->
     <div
-      :class="[
-        'absolute -inset-1 rounded-lg blur opacity-30 group-hover:opacity-75 transition duration-1000 group-hover:duration-200',
-        variant === 'battle'
-          ? 'bg-gradient-to-r from-indigo-600 to-purple-600'
-          : '',
-        variant === 'success'
-          ? 'bg-gradient-to-r from-emerald-600 to-teal-600'
-          : '',
-        variant === 'danger' ? 'bg-gradient-to-r from-red-600 to-rose-600' : '',
-      ]"
+      class="absolute -inset-1 rounded-lg blur opacity-30 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 bg-gradient-to-r bg-primary"
     ></div>
 
     <!-- Button content -->
@@ -63,14 +39,12 @@
 
 <script setup lang="ts">
 interface Props {
-  variant?: "battle" | "success" | "danger";
   size?: "sm" | "md" | "lg";
   leftIcon?: string;
   rightIcon?: string;
 }
 
 withDefaults(defineProps<Props>(), {
-  variant: "battle",
   size: "lg",
   leftIcon: "",
   rightIcon: "",
@@ -90,8 +64,7 @@ defineEmits<{
 
 .epic-button:hover {
   animation: none;
-  box-shadow: 0 0 30px rgba(79, 70, 229, 0.6),
-    inset 0 0 20px rgba(79, 70, 229, 0.6);
+  box-shadow: 0 0 30px rgba(37, 31, 144, 0.6);
 }
 
 @keyframes pulse {
