@@ -2,9 +2,9 @@
   <div class="relative w-full h-[600px]">
     <!-- Transition overlay with text -->
     <div
-      class="absolute inset-0 transition-all duration-500 z-50"
+      class="absolute inset-0 transition-all duration-500 z-50 rounded-3xl"
       :class="[
-        isTransitioning ? 'bg-white/90' : 'bg-transparent',
+        isTransitioning ? 'bg-white' : 'bg-transparent',
         isTransitioning ? 'opacity-100' : 'opacity-0',
       ]"
     >
